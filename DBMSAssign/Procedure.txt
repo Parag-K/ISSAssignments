@@ -1,0 +1,35 @@
+DELIMITER //
+CREATE PROCEDURE calculate_area(radi int)
+begin
+declare result int;
+set result = radi*(3.14)*radi;
+insert into Area values(radi, result);
+end//
+
+DELIMITER ;
+
+
+
+mysql> use assignment_4_b;
+Database changed
+mysql> show tables;
++--------------------------+
+| Tables_in_assignment_4_b |
++--------------------------+
+| area                     |
++--------------------------+
+1 row in set (0.00 sec)
+
+mysql> select * from Area;
++--------+------+
+| radius | area |
++--------+------+
+|      6 |  113 |
+|      7 |  154 |
+|      8 |  201 |
+|      9 |  254 |
+|      5 |   79 |
+|     10 |  314 |
+|     11 |  380 |
++--------+------+
+7 rows in set (0.00 sec)
