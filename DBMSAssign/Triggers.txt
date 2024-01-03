@@ -1,0 +1,125 @@
+
+mysql> desc books;
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| accno     | int         | YES  |     | NULL    |       |
+| title     | varchar(20) | YES  |     | NULL    |       |
+| author    | varchar(20) | YES  |     | NULL    |       |
+| publisher | varchar(20) | YES  |     | NULL    |       |
+| count     | int         | YES  |     | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+5 rows in set (0.04 sec)
+
+mysql> desc lib_audit;
++-----------+-------------+------+-----+---------+-------+
+| Field     | Type        | Null | Key | Default | Extra |
++-----------+-------------+------+-----+---------+-------+
+| accno     | int         | YES  |     | NULL    |       |
+| title     | varchar(20) | YES  |     | NULL    |       |
+| author    | varchar(20) | YES  |     | NULL    |       |
+| publisher | varchar(20) | YES  |     | NULL    |       |
+| count     | int         | YES  |     | NULL    |       |
+| action    | varchar(20) | YES  |     | NULL    |       |
++-----------+-------------+------+-----+---------+-------+
+6 rows in set (0.00 sec)
+
+mysql> insert into books(accno, title, author , publisher, count) values
+    -> (1, 'cn', 'acn', 'pcn', 5),
+    -> (2, 'dbms', 'adbms', 'pdbms', 10),
+    -> (3, 'spos', 'aspos', 'pspos', 7),
+    -> (4, 'toc', 'atoc', 'ptoc', 20),
+    -> (5, 'ds', 'ads', 'pds', 13);
+Query OK, 5 rows affected (0.02 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> select * from books;
++-------+-------+--------+-----------+-------+
+| accno | title | author | publisher | count |
++-------+-------+--------+-----------+-------+
+|     1 | cn    | acn    | pcn       |     5 |
+|     2 | dbms  | adbms  | pdbms     |    10 |
+|     3 | spos  | aspos  | pspos     |     7 |
+|     4 | toc   | atoc   | ptoc      |    20 |
+|     5 | ds    | ads    | pds       |    13 |
++-------+-------+--------+-----------+-------+
+5 rows in set (0.00 sec)
+
+mysql> delimiter //
+mysql> create trigger before_book_delete
+    -> after delete on books
+    -> for each row
+    -> begin
+    -> insert into lib_audit
+    -> set action = 'delete',
+    -> accno = old.accno,
+    -> title = old.title,
+    -> author = old.author,
+    -> publisher = old.publisher,
+    -> count = old.count;
+    -> end//
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> delimiter ;
+mysql> delete from books where accno=1;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> select * from books;
++-------+-------+--------+-----------+-------+
+| accno | title | author | publisher | count |
++-------+-------+--------+-----------+-------+
+|     2 | dbms  | adbms  | pdbms     |    10 |
+|     3 | spos  | aspos  | pspos     |     7 |
+|     4 | toc   | atoc   | ptoc      |    20 |
+|     5 | ds    | ads    | pds       |    13 |
++-------+-------+--------+-----------+-------+
+4 rows in set (0.00 sec)
+
+mysql> select * from lib_audit;
++-------+-------+--------+-----------+-------+--------+
+| accno | title | author | publisher | count | action |
++-------+-------+--------+-----------+-------+--------+
+|     1 | cn    | acn    | pcn       |     5 | delete |
++-------+-------+--------+-----------+-------+--------+
+1 row in set (0.00 sec)
+
+mysql> delimiter $$
+mysql> create trigger before_book_update
+    -> before update on books
+    -> for each row
+    -> begin
+    -> insert into lib_audit
+    -> set action = 'update',
+    -> accno = new.accno,
+    -> title = new.title,
+    -> author = new.author,
+    -> publisher = new.publisher,
+    -> count = new.count;
+    -> end$$
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> delimiter ;
+mysql> update books set count=8 where accno=3;
+Query OK, 1 row affected (0.03 sec)
+Rows matched: 1  Changed: 1  Warnings: 0
+
+mysql> select * from lib_audit;
++-------+-------+--------+-----------+-------+--------+
+| accno | title | author | publisher | count | action |
++-------+-------+--------+-----------+-------+--------+
+|     1 | cn    | acn    | pcn       |     5 | delete |
+|     3 | spos  | aspos  | pspos     |     8 | update |
++-------+-------+--------+-----------+-------+--------+
+2 rows in set (0.00 sec)
+
+mysql> select * from books;
++-------+-------+--------+-----------+-------+
+| accno | title | author | publisher | count |
++-------+-------+--------+-----------+-------+
+|     2 | dbms  | adbms  | pdbms     |    10 |
+|     3 | spos  | aspos  | pspos     |     8 |
+|     4 | toc   | atoc   | ptoc      |    20 |
+|     5 | ds    | ads    | pds       |    13 |
++-------+-------+--------+-----------+-------+
+4 rows in set (0.00 sec)
+
